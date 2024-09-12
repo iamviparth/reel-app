@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Models\Reel;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class ReelController extends Controller
@@ -14,7 +15,7 @@ class ReelController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
-            'video' => 'required|mimes:mp4,mov,ogg,qt|max:20000', // Limit to 20MB
+            'video' => 'required|mimes:mp4,mov,ogg,qt', // Limit to 20MB
         ]);
 
         if ($validator->fails()) {
@@ -23,10 +24,10 @@ class ReelController extends Controller
 
         $videoPath = $request->file('video')->store('reels', 'public');
 
-        $reel = Reel::create([
-            'title' => $request->title,
-            'video_path' => $videoPath,
-        ]);
+        $reel = new Reel();
+        $reel->title = $request->title;
+        $reel->video_path = asset(Storage::url($videoPath));
+        $reel->save();
 
         return response()->json(['message' => 'Reel uploaded successfully', 'reel' => $reel], 201);
     }
